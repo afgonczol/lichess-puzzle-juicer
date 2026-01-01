@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="High-performance browser-native Chess Puzzle Trainer with rating filters, theme selection, and infinite mode" />
+  <title>Chess Puzzle Trainer | Lichess Puzzle Juicer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="min-h-screen">
+  <div id="app" class="max-w-7xl mx-auto px-4 py-6 md:py-10">
+    <!-- Header -->
+    <header class="text-center mb-8">
+      <h1
+        class="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-[#00d4ff] to-[#9945ff] bg-clip-text text-transparent">
+        ♟ Chess Puzzle Trainer
+      </h1>
+      <p class="text-[#8899aa] text-sm md:text-base">
+        Infinite Mode • Filter by Rating & Theme • Track Your Progress
+      </p>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left Column: Stats -->
+      <div class="lg:col-span-1 space-y-4">
+        <!-- Stats Panel -->
+        <div class="panel panel-glow p-5">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-[#00d4ff]">📊 Stats</h2>
+            <div id="level-badge" class="level-badge">Lvl 1</div>
+          </div>
+
+          <div class="mb-5">
+            <div class="flex justify-between text-xs text-[#8899aa] mb-1">
+              <span>XP</span>
+              <span id="xp-text">0 / 100</span>
+            </div>
+            <div class="xp-container">
+              <div id="xp-bar" class="xp-bar"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="text-center">
+              <div id="streak" class="stat-value">0</div>
+              <div class="text-xs text-[#8899aa]">🔥 Streak</div>
+            </div>
+            <div class="text-center">
+              <div id="solved" class="stat-value">0</div>
+              <div class="text-xs text-[#8899aa]">✅ Solved</div>
+            </div>
+            <div class="text-center">
+              <div id="max-streak" class="stat-value">0</div>
+              <div class="text-xs text-[#8899aa]">🏆 Best</div>
+            </div>
+            <div class="text-center">
+              <div id="failed" class="stat-value">0</div>
+              <div class="text-xs text-[#8899aa]">❌ Failed</div>
+            </div>
+          </div>
+          <button id="review-failed-btn" class="btn-secondary w-full mt-4 text-sm hidden">
+            📝 Review Failed Puzzles
+          </button>
+        </div>
+
+        <!-- Filter Panel -->
+        <div class="panel p-5">
+          <h2 class="text-lg font-semibold mb-4 text-[#9945ff]">🎯 Filters</h2>
+
+          <!-- Rating Range -->
+          <div class="mb-4">
+            <label class="block text-sm text-[#8899aa] mb-2">
+              Rating: <span id="rating-display" class="text-white font-medium">800 - 2200</span>
+            </label>
+            <div class="flex gap-2 items-center">
+              <input type="range" id="min-rating" min="600" max="2500" value="800" step="50" class="flex-1">
+              <span class="text-xs text-[#8899aa]">to</span>
+              <input type="range" id="max-rating" min="600" max="2500" value="2200" step="50" class="flex-1">
+            </div>
+          </div>
+
+          <!-- Theme Selection -->
+          <div class="mb-4">
+            <label class="block text-sm text-[#8899aa] mb-2">Themes (optional)</label>
+            <select id="theme-select"
+              class="w-full bg-[#1a2744] border border-[#2d3f5e] rounded-lg p-2 text-sm text-white focus:border-[#00d4ff] focus:outline-none">
+              <option value="">All Themes</option>
+              <option value="mate">♔ Checkmate</option>
+              <option value="fork">⚔️ Fork</option>
+              <option value="pin">📌 Pin</option>
+              <option value="skewer">🗡️ Skewer</option>
+              <option value="discoveredAttack">💥 Discovered Attack</option>
+              <option value="sacrifice">🎁 Sacrifice</option>
+              <option value="backRankMate">🏰 Back Rank Mate</option>
+              <option value="endgame">🏁 Endgame</option>
+              <option value="defensive">🛡️ Defensive</option>
+            </select>
+          </div>
+
+          <button id="apply-filters-btn" class="btn-primary w-full text-sm">
+            Apply Filters
+          </button>
+          <p id="puzzle-count" class="text-xs text-[#8899aa] text-center mt-2">
+            55 puzzles available
+          </p>
+        </div>
+      </div>
+
+      <!-- Center Column: Board -->
+      <div class="lg:col-span-1">
+        <!-- Puzzle Info -->
+        <div class="mb-4 text-center">
+          <div id="puzzle-rating" class="text-sm text-[#8899aa]">
+            Loading puzzle...
+          </div>
+        </div>
+
+        <!-- Chess Board Container -->
+        <div id="board-container" class="relative mx-auto" style="max-width: 400px;">
+          <div id="board" class="w-full aspect-square"></div>
+        </div>
+
+        <!-- Feedback Display -->
+        <div id="feedback" class="mt-4 text-center min-h-[60px] flex items-center justify-center">
+          <div id="feedback-text" class="text-lg font-semibold"></div>
+        </div>
+
+        <!-- Move Navigation -->
+        <div class="flex gap-2 justify-center mt-4">
+          <button id="back-btn" class="btn-secondary text-sm" title="Go back one move (←)">
+            ◀ Back
+          </button>
+          <button id="forward-btn" class="btn-secondary text-sm" title="Go forward one move (→)">
+            Forward ▶
+          </button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-3 justify-center mt-3">
+          <button id="hint-btn" class="btn-secondary text-sm">
+            💡 Hint
+          </button>
+          <button id="skip-btn" class="btn-secondary text-sm">
+            ⏭️ Skip
+          </button>
+          <button id="next-btn" class="btn-primary text-sm hidden">
+            ➡️ Next Puzzle
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Column: Theme Reveal & Info -->
+      <div class="lg:col-span-1 space-y-4">
+        <!-- Move Instructions -->
+        <div class="panel p-5">
+          <h2 class="text-lg font-semibold mb-3 text-[#00d4ff]">🎮 Your Turn</h2>
+          <p id="turn-instruction" class="text-sm text-[#8899aa]">
+            Find the best move for the highlighted side
+          </p>
+          <div id="move-counter" class="mt-3 text-xs text-[#8899aa]">
+            Move <span id="current-move">1</span> of <span id="total-moves">?</span>
+          </div>
+        </div>
+
+        <!-- Theme Reveal (hidden until solved) -->
+        <div id="theme-reveal" class="panel p-5 hidden">
+          <h2 class="text-lg font-semibold mb-3 text-[#9945ff]">🏷️ Puzzle Themes</h2>
+          <div id="theme-tags" class="flex flex-wrap gap-2">
+            <!-- Theme tags will be inserted here -->
+          </div>
+          <a id="game-link" href="#" target="_blank" class="block mt-4 text-xs text-[#00d4ff] hover:underline">
+            View original game on Lichess →
+          </a>
+        </div>
+
+        <!-- Key Bindings -->
+        <div class="panel p-5 text-xs text-[#8899aa]">
+          <h3 class="font-semibold mb-2 text-white">⌨️ Keyboard Shortcuts</h3>
+          <div class="space-y-1">
+            <div><kbd class="bg-[#2d3f5e] px-1 rounded">←</kbd> Go back one move</div>
+            <div><kbd class="bg-[#2d3f5e] px-1 rounded">→</kbd> Go forward one move</div>
+            <div><kbd class="bg-[#2d3f5e] px-1 rounded">N</kbd> Next puzzle</div>
+            <div><kbd class="bg-[#2d3f5e] px-1 rounded">H</kbd> Show hint</div>
+            <div><kbd class="bg-[#2d3f5e] px-1 rounded">S</kbd> Skip puzzle</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>
